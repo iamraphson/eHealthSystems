@@ -6,8 +6,10 @@ app.controller('AuthController', ['$scope','Facebook', '$rootScope', '$location'
     function($scope, Facebook, $rootScope, $location, amMoment, pouchService, toastr, $localStorage) {
 
     $scope.login = function() {
+        /*$facebook.login().then(function() {
+            $scope.me();
+        });*/
         Facebook.login(function(response) {
-            console.log(response);
             if (response.status == 'connected') {
                 $scope.me();
             }
@@ -19,19 +21,27 @@ app.controller('AuthController', ['$scope','Facebook', '$rootScope', '$location'
      * me
      */
     $scope.me = function() {
-        Facebook.api('/me', {
-                fields: 'first_name, last_name, email, picture, gender, link'
-            }
-            ,function(response) {
+        /*$facebook.api("/me").then(
+            function(response) {
                 console.log(response);
+                /!*$scope.welcomeMsg = "Welcome " + response.name;
+                $scope.isLoggedIn = true;*!/
+            },
+            function(err) {
+                $scope.welcomeMsg = "Please log in";
+            }
+        );*/
+        Facebook.api('/me', {
+            fields: "id, name, first_name, last_name, age_range, link, gender, locale, picture, timezone, updated_time, verified, email"
+        },function(response) {
                 var userData = {
-                    _id: new Date().toISOString(),
+                    _id: response.id,
                     email: response.email,
-                    name: response.first_name + " " + response.last_name,
+                    name: response.name,
                     link: response.link,
-                    pix: response.picture.data.url,
-                    lastseen: new Date(),
+                    lastseen: new Date()
                 };
+
                 pouchService.addNewData(userData, function(status, data){
                     if(status){
                         $localStorage.eHealth_User = response;
@@ -42,7 +52,19 @@ app.controller('AuthController', ['$scope','Facebook', '$rootScope', '$location'
                         toastr.error(data.message, data.status);
                     }
                 });
-
         });
     };
+}]);
+
+app.controller('LogoutController', ['$location', 'toastr', '$localStorage', 'Facebook', '$scope',
+    function($location, toastr, $localStorage, Facebook, $scope){
+
+    if (!$localStorage.eHealth_User) { return; }
+    Facebook.logout(function() {
+        $scope.$apply(function() {
+            delete $localStorage.eHealth_User;
+            toastr.info('You have been logged out');
+            $location.path('/auth/login');
+        });
+    });
 }]);

@@ -7,7 +7,7 @@ appRoutes.config(['$routeProvider', '$locationProvider', function($routeProvider
     $routeProvider
         .when('/', {
             templateUrl: './views/home.client.view.html',
-            controller: null,
+            controller: 'HomeController',
             resolve: {
                 loginRequired: loginRequired
             }
@@ -19,11 +19,20 @@ appRoutes.config(['$routeProvider', '$locationProvider', function($routeProvider
                 skipIfLoggedIn: skipIfLoggedIn
             }
         })
+        .when('/logout', {
+            template: null,
+            controller: 'LogoutController',
+            resolve: {
+                loginRequired: loginRequired
+            }
+        })
         .otherwise({ redirectTo: '/' });
 
     function skipIfLoggedIn($localStorage, $q, $location) {
         var deferred = $q.defer();
+        delete $localStorage.eHealth_User;
         if ($localStorage.eHealth_User) {
+            //deferred.resolve();
             deferred.reject();
         } else {
             deferred.resolve();
